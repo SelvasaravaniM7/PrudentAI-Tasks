@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Resizer</title>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <style>
+        body, h1, h2, ul {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            color: #333;
+            padding: 20px;
+            text-align: center;
+        }
+
+        #upload-form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+            margin-top: 20px;
+        }
+
+        input[type="file"] {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50; 
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #45a049; 
+        }
+
+        h2 {
+            margin-top: 40px;
+            font-size: 24px;
+            color: #555;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 10px;
+        }
+
+        ul li {
+            margin: 10px 0;
+            font-size: 18px;
+            color: #333;
+        }
+
+        a {
+            color: #007BFF;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+       
+        @media screen and (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            #upload-form {
+                width: 100%;
+                padding: 15px;
+            }
+
+            input[type="file"], button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Upload Image</h1>
+    <form id="upload-form" enctype="multipart/form-data">
+        <input type="file" name="image" required>
+        <button type="submit">Upload</button>
+    </form>
+
+    <h2>Image URLs</h2>
+    <ul id="image-urls"></ul>
+
+    <script>
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        document.getElementById('upload-form').onsubmit = async (e) => {
+            e.preventDefault();  
+            const formData = new FormData(e.target);
+            const response = await fetch('/api/v1/image/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': csrfToken
+                }
+            });
+
+            const data = await response.json();
+            if (data.id) {
+               
+                const res = await fetch(`/api/v1/image/${data.id}/`);
+                const urls = await res.json();
+
+                const list = document.getElementById('image-urls');
+                list.innerHTML = `
+                    <li>Original: <a href="${urls.original_image}" target="_blank">Download</a></li>
+                    <li>Small: <a href="${urls.small_image}" target="_blank">Download</a></li>
+                    <li>Medium: <a href="${urls.medium_image}" target="_blank">Download</a></li>
+                `;
+            }
+        };
+    </script>
+</body>
+</html>
